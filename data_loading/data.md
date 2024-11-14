@@ -1,0 +1,1 @@
+please refer to data loading process of nnUNetv2 .

@@ -1,0 +1,31 @@
+dataset: lits2d
+train_dir: /home/main/wzx/dataset/LITS2d/train_aug
+val_dir: /home/main/wzx/dataset/LITS2d/val
+batch_size: 2
+img_size: 512
+scale: 0.25
+n_cls: 3
+in_dim: 1
+
+net: unet2d
+f_dim: 64
+
+optim: adam
+lr: 0.001
+weight_decay: 0
+
+loss: ce+dice
+
+epochs: 200
+val_step: 1
+
+group_epoch: 10
+
+vd_p:
+  - 0.6
+  - 0.5
+
+device: cuda:0
+
+
+
