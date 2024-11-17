@@ -2,13 +2,11 @@ dataset: brats
 train_dir: /home/..
 val_dir: /home/..
 batch_size: 2
-img_size: 512
-scale: 0.25
-n_cls: 3
+n_cls: 4
 in_dim: 4
 
 net: unet3d
-f_dim: 64
+f_dim: 32
 
 optim: sgd
 lr: 0.01
@@ -19,7 +17,7 @@ loss: ce+dice
 epochs: 200
 val_step: 1
 
-group_epoch: 10
+group_epoch: 2
 
 vd_p:
   - 0.6

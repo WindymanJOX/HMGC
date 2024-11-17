@@ -1,14 +1,12 @@
 import datetime
 
 import torch
-import torch.nn.functional as F
 from torch.utils.data.dataloader import DataLoader
 
 from models.g_loss import GroupLoss
-from models.fcl import doFCL
+from models.fcl.fcl import doFCL
 
 from utils.utils import *
-from evaluate import evaluate
 from utils.logger import create_logger
 from utils.dice_score import dice_loss
 
@@ -32,34 +30,29 @@ def trainer(f_extrator, fcl, optimizer, scheduler, criterion, conf,
         ce_dice_epoch_loss = 0
         group_epoch_loss = 0
         for batch in train_loader:
-            img= batch['image'].to(device=device)
-            mask = batch['mask'].to(device=device, dtype=torch.long)
-            logits = f_extrator(img)
-            xf = f_extrator.xfs
-            xf = xf[0:1, ...]
-            _mask = mask[0:1, ...]
-            xf = xf.flatten(-2).transpose(1, 2)
-            _mask = _mask.flatten(-2)
+            # img= batch['image'].to(device=device)
+            # mask = batch['mask'].to(device=device, dtype=torch.long)
+            img= batch[0].to(device=device)
+            mask = batch[1].to(device=device, dtype=torch.long)
+            logits = f_extrator(img)[0]
+            xf = f_extrator.xrs[0][0:1]
+            _mask = mask[0:1]
+            xf = xf.flatten(-3).transpose(1, 2)
+            _mask = _mask.flatten(-3)
 
-            ori_xf_n_sample = xf.shape[1]
-            mask_fcl = _mask
-            one_hot_label = one_hot_encode(f_extrator.n_classes, mask_fcl).to(device)
+            one_hot_label = one_hot_encode(conf.n_cls, _mask).to(device)
             xf = torch.cat([xf, one_hot_label], dim=-1)
             
-            if epoch >= conf.group_epoch:
-                xf, mask_fcl = doFCL(fcl, mask_fcl, xf, device)
+            # if epoch >= conf.group_epoch:
+            #     xf, _mask = doFCL(fcl, _mask, xf, device)
+            
+            xf, _mask = doFCL(fcl, _mask, xf, device)
 
-            droped_xf_n_sample = xf.shape[1]
-
-            mask_group = mask_fcl.squeeze(0)
-            group_loss = group(xf.squeeze(0), mask_group, epoch)
+            _mask = _mask.squeeze(0)
+            group_loss = group(xf.squeeze(0), _mask, epoch)
 
             loss = criterion(logits, mask)
-            loss += dice_loss(
-                F.softmax(logits, dim=1).float(),
-                F.one_hot(mask, f_extrator.n_classes).permute(0, 3, 1, 2).float(),
-                multiclass=True
-            )
+            loss += dice_loss(logits, mask)
             ce_dice_loss = loss.item()
             ce_dice_epoch_loss += ce_dice_loss
             group_epoch_loss += group_loss.item()
@@ -71,9 +64,7 @@ def trainer(f_extrator, fcl, optimizer, scheduler, criterion, conf,
             # torch.nn.utils.clip_grad_norm_(f_extrator.parameters(), 1.0)
             optimizer.step()
 
-        logger.info(f'ori xf n_sample: {ori_xf_n_sample}')
-        logger.info(f'droped xf n_sample: {droped_xf_n_sample}')
-        # update class_center_matrix every epoch
+        # update CGC_matrix every epoch
         group.update()
 
         ce_dice_epoch_loss /= len(train_loader)
@@ -82,10 +73,5 @@ def trainer(f_extrator, fcl, optimizer, scheduler, criterion, conf,
         logger.info(f'ce+dice loss: {ce_dice_epoch_loss}')
         logger.info(f'group loss: {group_epoch_loss}')
 
-        # Evaluation round
-        val_score, val_loss = evaluate(f_extrator, val_loader, device, criterion)
         scheduler.step()
-
-        logger.info(f'val dice score: {val_score}')
-        logger.info(f'val ce+dice loss: {val_loss}')
         

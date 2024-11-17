@@ -18,7 +18,7 @@ def label2correlaiton(label):
         return correlaiton
 
 def g_ancor(X, mask):
-        box_size = 32
+        box_size = 16
         if X.shape[1] <= box_size**2:
                 return X, mask
         h = int(np.sqrt(X.shape[1]))

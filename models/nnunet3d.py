@@ -1,13 +1,13 @@
 import torch
 from models import PlainConvUNet
 
-def get_net(pth = None):
+def get_net(dim_in, n_cls, pth = None):
     norm_kwargs = dict(num_groups=32, eps=1e-05, affine=True)
     nonlin_kwargs = dict(inplace=True)
 
-    model = PlainConvUNet(input_channels=4, n_stages=6, features_per_stage=(64, 128, 256, 512, 512, 512),
+    model = PlainConvUNet(input_channels=dim_in, n_stages=6, features_per_stage=(64, 128, 256, 512, 512, 512),
                         conv_op=torch.nn.modules.conv.Conv3d, kernel_sizes=3, strides=(1, 2, 2, 2, 2, 2), n_conv_per_stage=(2, 2, 2, 2, 2, 2), 
-                        num_classes=3, n_conv_per_stage_decoder=(2, 2, 2, 2, 2), conv_bias=True, norm_op=torch.nn.GroupNorm, 
+                        num_classes=n_cls, n_conv_per_stage_decoder=(2, 2, 2, 2, 2), conv_bias=True, norm_op=torch.nn.GroupNorm, 
                         norm_op_kwargs=norm_kwargs, dropout_op=None, dropout_op_kwargs=None, nonlin=torch.nn.LeakyReLU, 
                         nonlin_kwargs=nonlin_kwargs, deep_supervision=True)
     if pth is not None:

@@ -166,12 +166,3 @@ class GroupLoss(nn.Module):
         # reset and update
         nn.init.constant_(self.grad, 0.)
         nn.init.constant_(self.count, 0.)
-
-if __name__ == '__main__':
-    hmgc = GroupLoss(64, 4, 1, True)
-    data = torch.rand(2, 64, 128, 128, 128).cuda()
-    data.requires_grad_()
-    target = torch.sigmoid(torch.rand(2, 3, 128, 128, 128))
-    target = torch.where(target>0.7, True, False).cuda()
-
-    hmgc(data, target, 1)

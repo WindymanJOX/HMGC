@@ -4,9 +4,9 @@ import argparse
 
 import torch
 from torch import optim
-from torch.utils.data.dataloader import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
-from models.fcl import FCL
+from models.fcl.fcl import FCL
 from models.unet2d import UNet
 from models import nnunet3d
 from utils.trainer import trainer
@@ -15,15 +15,18 @@ def train_HMGC(conf):
     if conf.net == 'unet2d':
         f_extrator = UNet(conf.in_dim, conf.n_cls)
     elif conf.net == 'unet3d':
-        f_extrator = nnunet3d.get_net()
+        f_extrator = nnunet3d.get_net(conf.in_dim, conf.n_cls)
     
     fcl = FCL(conf.vd_p, conf.f_dim+conf.n_cls, conf.n_cls)
     
-    train_dir = conf.train_dir
-    val_dir = conf.val_dir
+    # train_dir = conf.train_dir
+    # val_dir = conf.val_dir
 
-    train_set = None
-    val_set = None
+    X = torch.rand(size=(20, 4, 128, 128, 128))
+    Y = torch.randint(0, 4, (20, 128, 128, 128))
+
+    train_set = TensorDataset(X, Y)
+    val_set = TensorDataset(X, Y)
 
     loader_args = dict(batch_size=conf.batch_size, num_workers=os.cpu_count(), pin_memory=True)
 
