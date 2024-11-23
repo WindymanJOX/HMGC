@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class GroupLoss(nn.Module):
-    def __init__(self, feat_dim, n_cls, start_dtrg = 1, use_gpu=True):
+    def __init__(self, feat_dim, n_cls, start_epoch = 1, use_gpu=True):
         super().__init__()
         self.feat_dim = feat_dim
         self.num_classes = n_cls
-        self.start_dtrg = start_dtrg
+        self.start_epoch = start_epoch
         self.ICG = True
         self.weight_cent = 1e-3
         self.IRCG = True
@@ -30,12 +30,6 @@ class GroupLoss(nn.Module):
         self.graph_weight_matrix = torch.mm(matrix_norm, matrix_norm.transpose(1, 0))
 
     def forward(self, xf, target, epoch):
-        """
-        Args:
-            xf: feature matrix with shape (batch_size, feat_dim).
-            target: ground truth labels with shape (batch_size).
-            epoch: represent the current epoch
-        """
         if self.training:
             with torch.no_grad():
                 if xf.dim() == 5:
@@ -43,7 +37,7 @@ class GroupLoss(nn.Module):
                 self.grad.index_add_(0, target, xf.detach().to(torch.float32))
                 self.count.index_add_(0, target, torch.ones_like(target.view(-1, 1), dtype=torch.float32))
 
-        if epoch >= self.start_dtrg:
+        if epoch >= self.start_epoch:
 
             if self.ICG is True:
                 centers = self.matrix[target]
