@@ -117,7 +117,7 @@ def predict_BraTS(model: nn.Module, dir: str, save_dir: str)->None:
 # model = nnunet3d.get_net().cuda()
 # predict_BraTS(model, _dir, save_dir)
 
-seg_path = r"G:\datasets\BraTS2020\MICCAI_BraTS2020_TrainingData\BraTS20_Training_001\BraTS20_Training_001_seg.nii.gz"
+seg_path = r""
 seg_npy = sitk.GetArrayFromImage(sitk.ReadImage(seg_path))
 crop_box = [13, 141, 56, 184, 56, 184]
 seg_npy = none_zero_crop_3D(seg_npy, crop_box)
